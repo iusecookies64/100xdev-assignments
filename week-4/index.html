@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script>
+            let globalId = 1;
+            let todoState = [
+                {
+                    title: "work",
+                    description: "completed all the work",
+                    id: globalId++,
+                },
+                {
+                    title: "gym",
+                    description: "go to gym",
+                    id: globalId++,
+                },
+                {
+                    title: "assignments",
+                    description: "completed all the assignments",
+                    id: globalId++,
+                },
+            ];
+            let oldTodoState = [];
+
+            // function to add item to dom
+            function addTodoToDom(todoItem) {
+                const todoContainer = document.getElementById("todos");
+                // creating item container
+                const todoDom = document.createElement("div");
+                todoDom.setAttribute("id", todoItem.id);
+
+                // creating title dom
+                const titleDom = document.createElement("h4");
+                titleDom.innerHTML = todoItem.title;
+
+                // creating description dom
+                const descriptionDom = document.createElement("p");
+                descriptionDom.innerHTML = todoItem.description;
+
+                // delete button dom
+                const delbtn = document.createElement("button");
+                delbtn.innerHTML = "Delete";
+                delbtn.setAttribute("onclick", `removeTodo(${todoItem.id})`);
+
+                // update button dom
+                const updatebtn = document.createElement("button");
+                updatebtn.innerHTML = "Update";
+                updatebtn.setAttribute("onclick", `updateTodo(${todoItem.id})`);
+
+                // appending childs to container
+                todoDom.appendChild(titleDom);
+                todoDom.appendChild(descriptionDom);
+                todoDom.appendChild(delbtn);
+                todoDom.appendChild(updatebtn);
+
+                // pushing todo into dom container
+                todoContainer.appendChild(todoDom);
+            }
+
+            // removes the todo item from dom
+            function removeTodoFromDom(todo) {
+                document.getElementById(todo.id).remove();
+            }
+
+            // updated todo item in dom
+            function updateTodoInDom(oldTodo, newTodo) {
+                const todoDom = document.getElementById(oldTodo.id);
+                if (oldTodo.title != newTodo.title)
+                    todoDom.firstChild.innerHTML = newTodo.title;
+                if (oldTodo.description != newTodo.description) {
+                    todoDom.childNodes[1].innerHTML = newTodo.description;
+                }
+            }
+
+            // whenever todoList changes this is called
+            function updateState(newTodos) {
+                // calculate the diff b/w newTodos and oldTodos.
+                // More specifically, find out what todos are -
+                // 1. added
+                // 2. deleted
+                // 3. updated
+                const added = [];
+                const deleted = [];
+                const updated = [];
+
+                // finding the updated and deleted todos
+                for (let i = 0; i < oldTodoState.length; i++) {
+                    let flag = false;
+                    for (let j = 0; j < newTodos.length; j++) {
+                        // if id is same then they are same todoItem
+                        if (newTodos[j].id === oldTodoState[i].id) {
+                            if (newTodos[j].title != oldTodoState[i].title) {
+                                updated.push([oldTodoState[i], newTodos[j]]);
+                            } else if (
+                                newTodos[j].description !=
+                                oldTodoState[i].description
+                            ) {
+                                updated.push([oldTodoState[i], newTodos[j]]);
+                            }
+
+                            // marking this object to be found
+                            flag = true;
+                            break;
+                        }
+                    }
+
+                    if (!flag) {
+                        // old item was deleted
+                        deleted.push(oldTodoState[i]);
+                    }
+                }
+
+                // finding the added todos
+                for (let i = 0; i < newTodos.length; i++) {
+                    let found = false;
+                    for (let j = 0; j < oldTodoState.length; j++) {
+                        if (newTodos[i].id == oldTodoState[j].id) {
+                            found = true;
+                            break;
+                        }
+                    }
+
+                    if (!found) {
+                        added.push(newTodos[i]);
+                    }
+                }
+
+                // calculate these 3 arrays
+                // call addTodo, removeTodo, updateTodo functions on each of the
+                // elements
+
+                added.forEach((newTodo) => addTodoToDom(newTodo));
+                deleted.forEach((oldTodo) => removeTodoFromDom(oldTodo));
+                updated.forEach(([oldTodo, newTodo]) => {
+                    updateTodoInDom(oldTodo, newTodo);
+                });
+
+                oldTodoState = JSON.parse(JSON.stringify(newTodos));
+            }
+
+            function addTodo() {
+                const title = document.getElementById("title").value;
+                const description =
+                    document.getElementById("description").value;
+                todoState.push({
+                    title: title,
+                    description: description,
+                    id: globalId++,
+                });
+                updateState(todoState);
+            }
+
+            function removeTodo(id) {
+                // console.log(todoState);
+                for (let i = 0; i < todoState.length; i++) {
+                    if (todoState[i].id == id) {
+                        todoState.splice(i, 1);
+                        break;
+                    }
+                }
+                // console.log(todoState);
+                updateState(todoState);
+            }
+            function updateTodo(id) {
+                let indx;
+                for (let i = 0; i < todoState.length; i++) {
+                    if (todoState[i].id == id) {
+                        indx = i;
+                        break;
+                    }
+                }
+                const newTitle = window.prompt("title", todoState[indx].title);
+                const newDecrtiption = window.prompt(
+                    "description",
+                    todoState[indx].description
+                );
+                todoState[indx].title = newTitle;
+                todoState[indx].description = newDecrtiption;
+                updateState(todoState);
+            }
+        </script>
+    </head>
+
+    <body>
+        <input type="text" id="title" placeholder="Todo title" />
+        <br /><br />
+        <input type="text" id="description" placeholder="Todo description" />
+        <br /><br />
+        <button onclick="addTodo()">Add todo</button>
+        <br />
+        <br />
+
+        <div id="todos"></div>
+
+        <script>
+            updateState(todoState);
+        </script>
+    </body>
+</html>
